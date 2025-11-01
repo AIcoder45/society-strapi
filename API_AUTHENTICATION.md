@@ -99,7 +99,7 @@ const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/news-art
   headers: {
     'Authorization': `Bearer ${token}`,
   },
-});
+}); 
 ```
 
 ---
