@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "advertisements",
+  "info": {
+    "singularName": "advertisement",
+    "pluralName": "advertisements",
+    "displayName": "Advertisement",
+    "description": "Advertisements for local businesses and services in Greenwood City"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text",
+      "required": true
+    },
+    "category": {
+      "type": "string",
+      "required": false
+    },
+    "businessName": {
+      "type": "string",
+      "required": false
+    },
+    "contactPhone": {
+      "type": "string",
+      "required": false
+    },
+    "contactEmail": {
+      "type": "email",
+      "required": false
+    },
+    "website": {
+      "type": "string",
+      "required": false
+    },
+    "discount": {
+      "type": "string",
+      "required": false
+    },
+    "offer": {
+      "type": "text",
+      "required": false
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "validUntil": {
+      "type": "date",
+      "required": false
+    }
+  }
+}
+

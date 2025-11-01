@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rwas",
+  "info": {
+    "singularName": "rwa",
+    "pluralName": "rwas",
+    "displayName": "RWA",
+    "description": "Resident Welfare Association committee members for Greenwood City"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2,
+      "maxLength": 100
+    },
+    "position": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "message": {
+      "type": "text",
+      "required": true,
+      "minLength": 10
+    },
+    "order": {
+      "type": "integer",
+      "required": true,
+      "default": 0,
+      "min": 0
+    }
+  }
+}
+

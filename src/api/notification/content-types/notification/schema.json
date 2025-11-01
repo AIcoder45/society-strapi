@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notifications",
+  "info": {
+    "singularName": "notification",
+    "pluralName": "notifications",
+    "displayName": "Notification",
+    "description": "Notifications for Greenwood City residents"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "message": {
+      "type": "text",
+      "required": true
+    },
+    "priority": {
+      "type": "enumeration",
+      "enum": ["normal", "urgent"],
+      "default": "normal",
+      "required": true
+    },
+    "expiryDate": {
+      "type": "date",
+      "required": false
+    }
+  }
+}
+
