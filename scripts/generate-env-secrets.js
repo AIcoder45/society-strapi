@@ -23,3 +23,5 @@ console.log('1. Never commit these values to Git');
 console.log('2. Add them to your hosting platform\'s environment variables');
 console.log('3. Keep them secure - regenerate if exposed');
 
+
+

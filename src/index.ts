@@ -154,6 +154,86 @@ const DUMMY_EVENTS = [
 ];
 
 /**
+ * Dummy galleries to seed
+ * Note: Images need to be uploaded manually through Strapi admin panel
+ */
+const DUMMY_GALLERIES = [
+  {
+    title: 'Summer Festival 2024',
+    description: 'Photos from the annual Greenwood City Summer Festival featuring live music, food vendors, and community celebrations.',
+  },
+  {
+    title: 'Community Garden Opening',
+    description: 'Celebration of the new community garden with residents, local officials, and volunteers.',
+  },
+  {
+    title: 'City Council Meeting Highlights',
+    description: 'Key moments from recent city council meetings and community engagement sessions.',
+  },
+  {
+    title: 'Park Renovation Progress',
+    description: 'Documentation of the ongoing park renovation project showing before and after transformations.',
+  },
+  {
+    title: 'Farmers Market Weekly Collection',
+    description: 'A collection of photos from weekly farmers markets showcasing local vendors and produce.',
+  },
+  {
+    title: 'Holiday Parade 2024',
+    description: 'Annual holiday parade featuring floats, marching bands, and community participation.',
+  },
+];
+
+/**
+ * Dummy RWA (Resident Welfare Association) committee members to seed
+ * Note: Photos need to be uploaded manually through Strapi admin panel
+ */
+const DUMMY_RWA = [
+  {
+    name: 'Dr. Sarah Johnson',
+    position: 'Chairperson',
+    message: 'I am committed to fostering a strong sense of community and ensuring all residents\' concerns are heard and addressed.',
+    order: 1,
+  },
+  {
+    name: 'Michael Chen',
+    position: 'Vice Chairperson',
+    message: 'Together we can build a better Greenwood City. My goal is to improve infrastructure and community facilities.',
+    order: 2,
+  },
+  {
+    name: 'Priya Sharma',
+    position: 'Secretary',
+    message: 'I will ensure transparent communication and keep all residents informed about important community matters and decisions.',
+    order: 3,
+  },
+  {
+    name: 'Robert Williams',
+    position: 'Treasurer',
+    message: 'I am dedicated to managing our community funds responsibly and ensuring financial transparency in all RWA activities.',
+    order: 4,
+  },
+  {
+    name: 'Emily Davis',
+    position: 'Member',
+    message: 'I focus on environmental initiatives and green spaces. Let\'s work together to make our city more sustainable.',
+    order: 5,
+  },
+  {
+    name: 'James Anderson',
+    position: 'Member',
+    message: 'Safety and security are my priorities. I work closely with local authorities to ensure our community remains safe.',
+    order: 6,
+  },
+  {
+    name: 'Lisa Martinez',
+    position: 'Member',
+    message: 'I am passionate about organizing community events and activities that bring our neighbors together.',
+    order: 7,
+  },
+];
+
+/**
  * Dummy notifications to seed
  */
 const DUMMY_NOTIFICATIONS: Array<{
@@ -551,6 +631,128 @@ async function seedEvents(strapi: Core.Strapi): Promise<void> {
 }
 
 /**
+ * Seeds dummy galleries if they don't already exist
+ * Note: Images need to be uploaded manually through Strapi admin panel
+ * @param strapi - Strapi instance
+ */
+async function seedGalleries(strapi: Core.Strapi): Promise<void> {
+  try {
+    const contentType = strapi.contentTypes['api::gallery.gallery'];
+
+    if (!contentType) {
+      strapi.log.warn('Gallery content type not found. Skipping seed.');
+      return;
+    }
+
+    const existingGalleries = await strapi.entityService.findMany(
+      'api::gallery.gallery',
+      {
+        fields: ['title'],
+      }
+    );
+
+    const existingTitles = new Set(
+      existingGalleries
+        .map((item) => (item.title ? String(item.title).toLowerCase() : ''))
+        .filter((title) => title.length > 0)
+    );
+
+    const galleriesToCreate = DUMMY_GALLERIES.filter(
+      (item) => !existingTitles.has(item.title.toLowerCase())
+    );
+
+    if (galleriesToCreate.length === 0) {
+      strapi.log.info('All dummy galleries already exist. Skipping seed.');
+      return;
+    }
+
+    strapi.log.info(`Seeding ${galleriesToCreate.length} galleries...`);
+    strapi.log.info('Note: Images need to be added manually through the Strapi admin panel.');
+
+    for (const gallery of galleriesToCreate) {
+      try {
+        await strapi.entityService.create('api::gallery.gallery', {
+          data: {
+            title: gallery.title,
+            description: gallery.description,
+            publishedAt: new Date(),
+            // Note: images field is omitted - add images manually through admin panel
+            // Note: event field is omitted - link to events manually through admin panel
+          },
+        });
+        strapi.log.info(`Created gallery: ${gallery.title}`);
+      } catch (error) {
+        strapi.log.error(`Failed to create gallery "${gallery.title}":`, error);
+      }
+    }
+
+    strapi.log.info('Gallery seeding completed.');
+  } catch (error) {
+    strapi.log.error('Error seeding galleries:', error);
+  }
+}
+
+/**
+ * Seeds dummy RWA committee members if they don't already exist
+ * Note: Photos need to be uploaded manually through Strapi admin panel
+ * @param strapi - Strapi instance
+ */
+async function seedRWA(strapi: Core.Strapi): Promise<void> {
+  try {
+    const contentType = strapi.contentTypes['api::rwa.rwa'];
+
+    if (!contentType) {
+      strapi.log.warn('RWA content type not found. Skipping seed.');
+      return;
+    }
+
+    const existingRWA = await strapi.entityService.findMany('api::rwa.rwa', {
+      fields: ['name'],
+    });
+
+    const existingNames = new Set(
+      existingRWA
+        .map((item) => (item.name ? String(item.name).toLowerCase() : ''))
+        .filter((name) => name.length > 0)
+    );
+
+    const rwaToCreate = DUMMY_RWA.filter(
+      (item) => !existingNames.has(item.name.toLowerCase())
+    );
+
+    if (rwaToCreate.length === 0) {
+      strapi.log.info('All dummy RWA members already exist. Skipping seed.');
+      return;
+    }
+
+    strapi.log.info(`Seeding ${rwaToCreate.length} RWA committee members...`);
+    strapi.log.info('Note: Photos need to be added manually through the Strapi admin panel.');
+
+    for (const rwa of rwaToCreate) {
+      try {
+        await strapi.entityService.create('api::rwa.rwa', {
+          data: {
+            name: rwa.name,
+            position: rwa.position,
+            message: rwa.message,
+            order: rwa.order,
+            publishedAt: new Date(),
+            // Note: photo field is omitted - add photos manually through admin panel
+          },
+        });
+        strapi.log.info(`Created RWA member: ${rwa.name} (${rwa.position})`);
+      } catch (error) {
+        strapi.log.error(`Failed to create RWA member "${rwa.name}":`, error);
+      }
+    }
+
+    strapi.log.info('RWA seeding completed.');
+  } catch (error) {
+    strapi.log.error('Error seeding RWA:', error);
+  }
+}
+
+/**
  * Configures public API permissions for all content types
  * Enables find and findOne for public access without authentication
  * @param strapi - Strapi instance
@@ -727,6 +929,8 @@ export default {
     await seedAdvertisements(strapi);
     await seedNews(strapi);
     await seedEvents(strapi);
+    await seedGalleries(strapi);
+    await seedRWA(strapi);
     await seedNotifications(strapi);
   },
 };
