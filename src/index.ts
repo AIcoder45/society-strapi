@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { compressImage } from './utils/image-compression';
 
 /**
  * Dummy content categories to seed
@@ -820,6 +821,24 @@ async function configurePublicPermissions(strapi: Core.Strapi): Promise<void> {
       });
     }
 
+    // Single types need find permission (not findOne)
+    const singleTypes = [
+      'api::homepage.homepage',
+      'api::theme.theme',
+      'api::contact.contact',
+    ];
+
+    for (const singleType of singleTypes) {
+      const findAction = `${singleType}.find`;
+      const hasFind = existingPermissions.some((p) => p.action === findAction);
+
+      if (!hasFind) {
+        permissionsToCreate.push({
+          action: findAction,
+        });
+      }
+    }
+
     if (permissionsToCreate.length === 0) {
       strapi.log.info('All public permissions already configured. Skipping.');
       return;
@@ -907,6 +926,164 @@ async function seedNotifications(strapi: Core.Strapi): Promise<void> {
   }
 }
 
+/**
+ * Gets file extension from MIME type
+ */
+function getFileExtension(mimeType: string): string {
+  const mimeToExt: Record<string, string> = {
+    'image/jpeg': 'jpeg',
+    'image/jpg': 'jpeg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'image/svg+xml': 'svg',
+  };
+  return mimeToExt[mimeType] || 'jpeg';
+}
+
+/**
+ * Sets up image compression for all uploads
+ * Hooks into the upload service formatFile method to compress images and rename logos
+ * @param strapi - Strapi instance
+ */
+async function setupImageCompression(strapi: Core.Strapi): Promise<void> {
+  try {
+    const uploadService = strapi.plugin('upload').service('upload');
+    
+    // Store original formatFile if it exists
+    const originalFormatFile = uploadService.formatFile?.bind(uploadService);
+
+    // Override formatFile method to compress images and rename logos
+    uploadService.formatFile = async function (file: {
+      buffer?: Buffer;
+      mime?: string;
+      name?: string;
+      size?: number;
+      [key: string]: unknown;
+    }) {
+      // Only process image files
+      if (file.mime && file.mime.startsWith('image/') && file.buffer && Buffer.isBuffer(file.buffer)) {
+        try {
+          strapi.log.info(`Compressing image: ${file.name} (${file.mime})`);
+
+          // Compress the image
+          const compressedBuffer = await compressImage(file.buffer, file.mime, strapi);
+
+          // Update the file buffer and size
+          file.buffer = compressedBuffer;
+          file.size = compressedBuffer.length;
+
+          strapi.log.info(`Image compression completed for: ${file.name}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          strapi.log.error(`Failed to compress image ${file.name}: ${errorMessage}`);
+          // Continue with original file if compression fails
+        }
+      }
+
+      // Call original formatFile if it exists, otherwise return the file
+      if (originalFormatFile) {
+        return originalFormatFile(file);
+      }
+      
+      return file;
+    };
+
+    strapi.log.info('Image compression middleware initialized');
+  } catch (error) {
+    strapi.log.error('Failed to setup image compression:', error);
+  }
+}
+
+/**
+ * Sets up logo renaming for Theme content type
+ * Renames logo, logoDark, and favicon images to generic names
+ * @param strapi - Strapi instance
+ */
+async function setupLogoRenaming(strapi: Core.Strapi): Promise<void> {
+  try {
+    // Hook into Theme content type lifecycle - use after hooks so files are saved
+    strapi.db.lifecycles.subscribe({
+      models: ['api::theme.theme'],
+      async afterCreate(event) {
+        await renameLogoFiles(event.result, strapi);
+      },
+      async afterUpdate(event) {
+        await renameLogoFiles(event.result, strapi);
+      },
+    });
+
+    strapi.log.info('Logo renaming middleware initialized for Theme content type');
+  } catch (error) {
+    strapi.log.error('Failed to setup logo renaming:', error);
+  }
+}
+
+/**
+ * Renames logo files to generic names
+ * @param themeData - Theme data (can be from params or result)
+ * @param strapi - Strapi instance
+ */
+async function renameLogoFiles(themeData: {
+  logo?: number | { id?: number } | { data?: { id?: number } };
+  logoDark?: number | { id?: number } | { data?: { id?: number } };
+  favicon?: number | { id?: number } | { data?: { id?: number } };
+  [key: string]: unknown;
+}, strapi: Core.Strapi): Promise<void> {
+  const logoFields = [
+    { field: 'logo', genericName: 'logo' },
+    { field: 'logoDark', genericName: 'logo-dark' },
+    { field: 'favicon', genericName: 'favicon' },
+  ];
+
+  for (const { field, genericName } of logoFields) {
+    const fileRef = themeData[field];
+    if (!fileRef) continue;
+
+    try {
+      // Get the file ID - handle different formats (number, object with id, or populated with data.id)
+      let id: number | undefined;
+      if (typeof fileRef === 'number') {
+        id = fileRef;
+      } else if (fileRef && typeof fileRef === 'object') {
+        id = (fileRef as { id?: number; data?: { id?: number } }).id || 
+             (fileRef as { id?: number; data?: { id?: number } }).data?.id;
+      }
+      
+      if (!id) continue;
+
+      // Fetch the file
+      const file = await strapi.entityService.findOne('plugin::upload.file', id, {
+        populate: '*',
+      });
+
+      if (!file || !file.mime || !file.mime.startsWith('image/')) {
+        continue;
+      }
+
+      // Get file extension from MIME type
+      const extension = getFileExtension(file.mime);
+      const newName = `${genericName}.${extension}`;
+
+      // Only rename if it's different
+      if (file.name !== newName) {
+        // Update the file name
+        await strapi.entityService.update('plugin::upload.file', id, {
+          data: {
+            name: newName,
+          },
+        });
+
+        strapi.log.info(`Renamed ${field} from "${file.name}" to "${newName}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      strapi.log.warn(`Failed to rename ${field}: ${errorMessage}`);
+      // Continue with other fields if one fails
+    }
+  }
+}
+
 export default {
   /**
    * An asynchronous register function that runs before
@@ -924,6 +1101,12 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    // Setup image compression for uploads
+    await setupImageCompression(strapi);
+    
+    // Setup logo renaming for Theme content type
+    await setupLogoRenaming(strapi);
+
     await configurePublicPermissions(strapi);
     await seedContentCategories(strapi);
     await seedAdvertisements(strapi);
