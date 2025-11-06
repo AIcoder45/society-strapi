@@ -1,5 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import { compressImage } from './utils/image-compression';
+import { ensureVAPIDInitialized, notifyContentChange } from './utils/push-notifications';
 
 /**
  * Dummy content categories to seed
@@ -231,6 +232,128 @@ const DUMMY_RWA = [
     position: 'Member',
     message: 'I am passionate about organizing community events and activities that bring our neighbors together.',
     order: 7,
+  },
+];
+
+/**
+ * Dummy service providers to seed
+ */
+const DUMMY_SERVICE_PROVIDERS: Array<{
+  name: string;
+  serviceType: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  description?: string;
+  rating?: number;
+  verified: boolean;
+  available: boolean;
+  emergency: boolean;
+  order: number;
+}> = [
+  {
+    name: 'Greenwood Plumbing Services',
+    serviceType: 'plumber',
+    phone: '+1-555-0101',
+    email: 'info@greenwoodplumbing.com',
+    address: '123 Main Street, Greenwood City',
+    description: 'Professional plumbing services for residential and commercial properties. Licensed and insured. 24/7 emergency service available.',
+    rating: 4.8,
+    verified: true,
+    available: true,
+    emergency: true,
+    order: 1,
+  },
+  {
+    name: 'City Electric Solutions',
+    serviceType: 'electrician',
+    phone: '+1-555-0102',
+    email: 'contact@cityelectric.com',
+    address: '456 Oak Avenue, Greenwood City',
+    description: 'Expert electrical services including wiring, repairs, installations, and electrical safety inspections. Certified electricians.',
+    rating: 4.9,
+    verified: true,
+    available: true,
+    emergency: true,
+    order: 2,
+  },
+  {
+    name: 'Pro HVAC Services',
+    serviceType: 'hvac',
+    phone: '+1-555-0103',
+    email: 'service@prohvac.com',
+    address: '789 Pine Road, Greenwood City',
+    description: 'Heating, ventilation, and air conditioning services. Installation, maintenance, and repair of all HVAC systems.',
+    rating: 4.7,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 3,
+  },
+  {
+    name: 'Greenwood Carpentry Works',
+    serviceType: 'carpenter',
+    phone: '+1-555-0104',
+    email: 'info@greenwoodcarpentry.com',
+    address: '321 Elm Street, Greenwood City',
+    description: 'Custom carpentry, furniture making, cabinet installation, and woodworking services. Quality craftsmanship guaranteed.',
+    rating: 4.6,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 4,
+  },
+  {
+    name: 'Quick Fix Appliance Repair',
+    serviceType: 'appliance-repair',
+    phone: '+1-555-0105',
+    email: 'repair@quickfix.com',
+    address: '654 Maple Drive, Greenwood City',
+    description: 'Fast and reliable appliance repair services. We fix refrigerators, washing machines, dryers, ovens, and more.',
+    rating: 4.5,
+    verified: false,
+    available: true,
+    emergency: false,
+    order: 5,
+  },
+  {
+    name: 'Greenwood Landscaping',
+    serviceType: 'landscaper',
+    phone: '+1-555-0106',
+    email: 'hello@greenwoodlandscaping.com',
+    address: '987 Cedar Lane, Greenwood City',
+    description: 'Professional landscaping services including lawn care, garden design, tree planting, and outdoor space beautification.',
+    rating: 4.7,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 6,
+  },
+  {
+    name: '24/7 Locksmith Services',
+    serviceType: 'locksmith',
+    phone: '+1-555-0107',
+    email: 'service@locksmith247.com',
+    address: '147 Birch Boulevard, Greenwood City',
+    description: 'Emergency locksmith services available 24/7. Lock installation, key duplication, safe opening, and security system installation.',
+    rating: 4.8,
+    verified: true,
+    available: true,
+    emergency: true,
+    order: 7,
+  },
+  {
+    name: 'City Painters Pro',
+    serviceType: 'painter',
+    phone: '+1-555-0108',
+    email: 'info@citypainters.com',
+    address: '258 Spruce Street, Greenwood City',
+    description: 'Interior and exterior painting services. Professional painters with years of experience. Free estimates available.',
+    rating: 4.6,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 8,
   },
 ];
 
@@ -694,6 +817,76 @@ async function seedGalleries(strapi: Core.Strapi): Promise<void> {
 }
 
 /**
+ * Seeds dummy service providers if they don't already exist
+ * Note: Images need to be uploaded manually through Strapi admin panel
+ * @param strapi - Strapi instance
+ */
+async function seedServiceProviders(strapi: Core.Strapi): Promise<void> {
+  try {
+    const contentType = strapi.contentTypes['api::service-provider.service-provider'];
+
+    if (!contentType) {
+      strapi.log.warn('Service Provider content type not found. Skipping seed.');
+      return;
+    }
+
+    const existingProviders = await strapi.entityService.findMany(
+      'api::service-provider.service-provider',
+      {
+        fields: ['name'],
+      }
+    );
+
+    const existingNames = new Set(
+      existingProviders
+        .map((item) => (item.name ? String(item.name).toLowerCase() : ''))
+        .filter((name) => name.length > 0)
+    );
+
+    const providersToCreate = DUMMY_SERVICE_PROVIDERS.filter(
+      (item) => !existingNames.has(item.name.toLowerCase())
+    );
+
+    if (providersToCreate.length === 0) {
+      strapi.log.info('All dummy service providers already exist. Skipping seed.');
+      return;
+    }
+
+    strapi.log.info(`Seeding ${providersToCreate.length} service providers...`);
+    strapi.log.info('Note: Images need to be added manually through the Strapi admin panel.');
+
+    for (const provider of providersToCreate) {
+      try {
+        await strapi.entityService.create('api::service-provider.service-provider', {
+          data: {
+            name: provider.name,
+            serviceType: provider.serviceType,
+            phone: provider.phone,
+            email: provider.email || null,
+            address: provider.address || null,
+            description: provider.description || null,
+            rating: provider.rating || null,
+            verified: provider.verified,
+            available: provider.available,
+            emergency: provider.emergency,
+            order: provider.order,
+            publishedAt: new Date(),
+            // Note: image field is omitted - add images manually through admin panel
+          },
+        });
+        strapi.log.info(`Created service provider: ${provider.name} (${provider.serviceType})`);
+      } catch (error) {
+        strapi.log.error(`Failed to create service provider "${provider.name}":`, error);
+      }
+    }
+
+    strapi.log.info('Service provider seeding completed.');
+  } catch (error) {
+    strapi.log.error('Error seeding service providers:', error);
+  }
+}
+
+/**
  * Seeds dummy RWA committee members if they don't already exist
  * Note: Photos need to be uploaded manually through Strapi admin panel
  * @param strapi - Strapi instance
@@ -780,10 +973,15 @@ async function configurePublicPermissions(strapi: Core.Strapi): Promise<void> {
       'api::gallery.gallery',
       'api::policy.policy',
       'api::rwa.rwa',
+      'api::push-subscription.push-subscription',
+      'api::service-provider.service-provider',
     ];
 
     // Actions to enable for each content type
     const actions = ['find', 'findOne'];
+
+    // Special permissions for push-subscription
+    const pushSubscriptionActions = ['find', 'create', 'delete'];
 
     // Get all existing permissions for the public role
     const existingPermissions = await strapi
@@ -808,6 +1006,19 @@ async function configurePublicPermissions(strapi: Core.Strapi): Promise<void> {
             action: permissionAction,
           });
         }
+      }
+    }
+
+    // Special handling for push-subscription (needs create and delete)
+    const pushSubscriptionType = 'api::push-subscription.push-subscription';
+    for (const action of pushSubscriptionActions) {
+      const permissionAction = `${pushSubscriptionType}.${action}`;
+      const permissionKey = `${permissionAction}-${pushSubscriptionType}`;
+
+      if (!existingPermissionActions.has(permissionKey)) {
+        permissionsToCreate.push({
+          action: permissionAction,
+        });
       }
     }
 
@@ -948,7 +1159,18 @@ function getFileExtension(mimeType: string): string {
  */
 async function setupImageCompression(strapi: Core.Strapi): Promise<void> {
   try {
+    // Validate that upload plugin exists
+    if (!strapi.plugin('upload')) {
+      strapi.log.warn('Upload plugin not found. Skipping image compression setup.');
+      return;
+    }
+
     const uploadService = strapi.plugin('upload').service('upload');
+    
+    if (!uploadService) {
+      strapi.log.warn('Upload service not found. Skipping image compression setup.');
+      return;
+    }
     
     // Store original formatFile if it exists
     const originalFormatFile = uploadService.formatFile?.bind(uploadService);
@@ -991,7 +1213,76 @@ async function setupImageCompression(strapi: Core.Strapi): Promise<void> {
 
     strapi.log.info('Image compression middleware initialized');
   } catch (error) {
-    strapi.log.error('Failed to setup image compression:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    strapi.log.error(`Failed to setup image compression: ${errorMessage}`);
+  }
+}
+
+/**
+ * Sets up push notification lifecycle hooks
+ * Sends notifications when content is created, updated, or deleted
+ * @param strapi - Strapi instance
+ */
+async function setupPushNotifications(strapi: Core.Strapi): Promise<void> {
+  try {
+    // Initialize VAPID keys
+    ensureVAPIDInitialized(strapi);
+
+    // Content types that should trigger push notifications
+    const contentTypesWithNotifications = [
+      'api::news.news',
+      'api::event.event',
+      'api::notification.notification',
+      'api::advertisement.advertisement',
+      'api::policy.policy',
+    ];
+
+    for (const contentType of contentTypesWithNotifications) {
+      strapi.db.lifecycles.subscribe({
+        models: [contentType],
+        async afterCreate(event) {
+          try {
+            await notifyContentChange(
+              contentType.replace('api::', '').replace(/\.\w+$/, ''),
+              'create',
+              event.result,
+              strapi
+            );
+          } catch (error) {
+            strapi.log.error(`Failed to send push notification for ${contentType} create:`, error);
+          }
+        },
+        async afterUpdate(event) {
+          try {
+            await notifyContentChange(
+              contentType.replace('api::', '').replace(/\.\w+$/, ''),
+              'update',
+              event.result,
+              strapi
+            );
+          } catch (error) {
+            strapi.log.error(`Failed to send push notification for ${contentType} update:`, error);
+          }
+        },
+        async afterDelete(event) {
+          try {
+            await notifyContentChange(
+              contentType.replace('api::', '').replace(/\.\w+$/, ''),
+              'delete',
+              event.result || {},
+              strapi
+            );
+          } catch (error) {
+            strapi.log.error(`Failed to send push notification for ${contentType} delete:`, error);
+          }
+        },
+      });
+    }
+
+    strapi.log.info('Push notification lifecycle hooks initialized');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    strapi.log.error(`Failed to setup push notifications: ${errorMessage}`);
   }
 }
 
@@ -1107,6 +1398,9 @@ export default {
     // Setup logo renaming for Theme content type
     await setupLogoRenaming(strapi);
 
+    // Setup push notifications
+    await setupPushNotifications(strapi);
+
     await configurePublicPermissions(strapi);
     await seedContentCategories(strapi);
     await seedAdvertisements(strapi);
@@ -1115,5 +1409,6 @@ export default {
     await seedGalleries(strapi);
     await seedRWA(strapi);
     await seedNotifications(strapi);
+    await seedServiceProviders(strapi);
   },
 };

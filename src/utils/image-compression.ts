@@ -1,16 +1,18 @@
 /**
  * Image compression utility
- * Compresses images to reduce file size to approximately 10% of original
+ * Compresses images based on configurable quality settings
  */
 
 import sharp from 'sharp';
 import type { Core } from '@strapi/strapi';
+import compressionConfig from '../../config/image-compression';
 
 /**
  * Compresses an image file using sharp
- * Target: Reduce file size to approximately 10% of original
+ * Uses configurable quality settings from config/image-compression.ts
  * @param fileBuffer - The file buffer
  * @param mimeType - The MIME type of the file
+ * @param strapi - Strapi instance
  * @returns Compressed image buffer
  */
 export async function compressImage(
@@ -25,42 +27,43 @@ export async function compressImage(
     const metadata = await sharpInstance.metadata();
     const originalSize = fileBuffer.length;
 
+    // Resize if image is too large (do this first to avoid double resize)
+    const shouldResize = metadata.width && metadata.width > compressionConfig.maxWidth;
+    if (shouldResize) {
+      sharpInstance = sharpInstance.resize({
+        width: compressionConfig.maxWidth,
+        fit: 'inside',
+        withoutEnlargement: true,
+      });
+    }
+
     // Configure compression based on image type
     if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
       sharpInstance = sharpInstance.jpeg({
-        quality: 10, // Very low quality to achieve ~10% file size
-        progressive: true,
-        mozjpeg: true,
+        quality: compressionConfig.quality,
+        progressive: compressionConfig.progressive,
+        mozjpeg: compressionConfig.mozjpeg,
       });
     } else if (mimeType.includes('png')) {
       sharpInstance = sharpInstance.png({
-        quality: 10, // Low quality
-        compressionLevel: 9, // Maximum compression
+        quality: compressionConfig.quality,
+        compressionLevel: compressionConfig.pngCompressionLevel,
         adaptiveFiltering: true,
       });
     } else if (mimeType.includes('webp')) {
       sharpInstance = sharpInstance.webp({
-        quality: 10, // Very low quality
-        effort: 6, // Higher effort for better compression
+        quality: compressionConfig.quality,
+        effort: compressionConfig.webpEffort,
       });
     } else if (mimeType.includes('gif')) {
-      // GIFs are harder to compress, resize instead
-      if (metadata.width && metadata.height) {
+      // GIFs: resize once if needed (avoid double resize)
+      if (metadata.width && metadata.height && !shouldResize) {
         sharpInstance = sharpInstance.resize({
-          width: Math.floor(metadata.width * 0.8),
-          height: Math.floor(metadata.height * 0.8),
+          width: Math.floor(metadata.width * compressionConfig.gifResizeFactor),
+          height: Math.floor(metadata.height * compressionConfig.gifResizeFactor),
           fit: 'inside',
         });
       }
-    }
-
-    // Resize if image is too large (helps with compression)
-    if (metadata.width && metadata.width > 2000) {
-      sharpInstance = sharpInstance.resize({
-        width: 2000,
-        fit: 'inside',
-        withoutEnlargement: true,
-      });
     }
 
     const compressedBuffer = await sharpInstance.toBuffer();
@@ -68,7 +71,7 @@ export async function compressImage(
     const compressionRatio = originalSize > 0 ? (compressedSize / originalSize) * 100 : 0;
 
     strapi.log.info(
-      `Image compressed: ${(originalSize / 1024).toFixed(2)} KB → ${(compressedSize / 1024).toFixed(2)} KB (${compressionRatio.toFixed(2)}% of original)`
+      `Image compressed: ${(originalSize / 1024).toFixed(2)} KB → ${(compressedSize / 1024).toFixed(2)} KB (${compressionRatio.toFixed(2)}% of original, quality: ${compressionConfig.quality})`
     );
 
     return compressedBuffer;

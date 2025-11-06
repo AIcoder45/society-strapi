@@ -1,0 +1,89 @@
+{
+  "kind": "collectionType",
+  "collectionName": "service_providers",
+  "info": {
+    "singularName": "service-provider",
+    "pluralName": "service-providers",
+    "displayName": "Service Provider",
+    "description": "Service providers directory for Greenwood City Block C (plumbers, electricians, etc.)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "serviceType": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "phone": {
+      "type": "string",
+      "required": true,
+      "maxLength": 20
+    },
+    "email": {
+      "type": "email",
+      "required": false,
+      "maxLength": 255
+    },
+    "address": {
+      "type": "text",
+      "required": false
+    },
+    "description": {
+      "type": "text",
+      "required": false
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "rating": {
+      "type": "decimal",
+      "required": false,
+      "min": 1,
+      "max": 5
+    },
+    "verified": {
+      "type": "boolean",
+      "required": false,
+      "default": false
+    },
+    "available": {
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "emergency": {
+      "type": "boolean",
+      "required": false,
+      "default": false
+    },
+    "order": {
+      "type": "integer",
+      "required": false,
+      "default": 0
+    },
+    "createdAt": {
+      "type": "datetime",
+      "required": false
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "required": false
+    },
+    "publishedAt": {
+      "type": "datetime",
+      "required": false
+    }
+  }
+}
+
