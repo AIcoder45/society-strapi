@@ -1,24 +1,11 @@
 /**
  * Get Strapi API URL dynamically
- * Uses environment variable or detects from current hostname
+ * Uses environment variable or defaults to localhost
  * @returns Strapi API base URL
  */
 export function getStrapiUrl(): string {
-  // Check for environment variable first (most reliable)
-  if (typeof window !== 'undefined') {
-    // Client-side: use NEXT_PUBLIC_ prefix or detect from current hostname
-    const envUrl = process.env.NEXT_PUBLIC_STRAPI_URL || process.env.STRAPI_URL;
-    if (envUrl) return envUrl;
-    
-    // Auto-detect from current hostname (same origin)
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    const port = hostname === 'localhost' ? ':1337' : '';
-    return `${protocol}//${hostname}${port}`;
-  } else {
-    // Server-side: use STRAPI_URL
-    return process.env.STRAPI_URL || 'http://localhost:1337';
-  }
+  // Server-side: use STRAPI_URL environment variable or default to localhost
+  return process.env.STRAPI_URL || 'http://localhost:1337';
 }
 
 /**
