@@ -1,0 +1,87 @@
+{
+  "kind": "singleType",
+  "collectionName": "homepages",
+  "info": {
+    "singularName": "homepage",
+    "pluralName": "homepages",
+    "displayName": "Homepage",
+    "description": "Homepage content for Greenwood City Block C website"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "heroWelcomeText": {
+      "type": "string",
+      "required": true,
+      "default": "Welcome to",
+      "maxLength": 200
+    },
+    "heroTitleText": {
+      "type": "string",
+      "required": true,
+      "default": "Greenwood City",
+      "maxLength": 200
+    },
+    "heroSubtitleText": {
+      "type": "string",
+      "required": true,
+      "default": "Block C",
+      "maxLength": 200
+    },
+    "heroDescription": {
+      "type": "text",
+      "required": true
+    },
+    "heroDescriptionMobile": {
+      "type": "text",
+      "required": false
+    },
+    "newsSectionTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Latest News",
+      "maxLength": 200
+    },
+    "newsSectionSubtitle": {
+      "type": "text",
+      "required": true,
+      "default": "Stay informed with the latest community updates"
+    },
+    "eventsSectionTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Upcoming Events",
+      "maxLength": 200
+    },
+    "eventsSectionSubtitle": {
+      "type": "text",
+      "required": true,
+      "default": "Join us for exciting community events and activities"
+    },
+    "gallerySectionTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Photo Gallery",
+      "maxLength": 200
+    },
+    "gallerySectionSubtitle": {
+      "type": "text",
+      "required": true,
+      "default": "Memorable moments from our community events and activities"
+    },
+    "advertisementsSectionTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Local Advertisements",
+      "maxLength": 200
+    },
+    "advertisementsSectionSubtitle": {
+      "type": "text",
+      "required": true,
+      "default": "Discover offers and services from local residents"
+    }
+  }
+}
+

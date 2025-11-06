@@ -681,6 +681,90 @@ export interface ApiGalleryGallery extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
+  collectionName: 'homepages';
+  info: {
+    description: 'Homepage content for Greenwood City Block C website';
+    displayName: 'Homepage';
+    pluralName: 'homepages';
+    singularName: 'homepage';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    advertisementsSectionSubtitle: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'Discover offers and services from local residents'>;
+    advertisementsSectionTitle: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Local Advertisements'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    eventsSectionSubtitle: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'Join us for exciting community events and activities'>;
+    eventsSectionTitle: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Upcoming Events'>;
+    gallerySectionSubtitle: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'Memorable moments from our community events and activities'>;
+    gallerySectionTitle: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Photo Gallery'>;
+    heroDescription: Schema.Attribute.Text & Schema.Attribute.Required;
+    heroDescriptionMobile: Schema.Attribute.Text;
+    heroSubtitleText: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Block C'>;
+    heroTitleText: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Greenwood City'>;
+    heroWelcomeText: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Welcome to'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::homepage.homepage'
+    > &
+      Schema.Attribute.Private;
+    newsSectionSubtitle: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'Stay informed with the latest community updates'>;
+    newsSectionTitle: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }> &
+      Schema.Attribute.DefaultTo<'Latest News'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiNewsNews extends Struct.CollectionTypeSchema {
   collectionName: 'news';
   info: {
@@ -781,6 +865,44 @@ export interface ApiPolicyPolicy extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiPushSubscriptionPushSubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'push_subscriptions';
+  info: {
+    description: 'Stores push notification subscriptions for users';
+    displayName: 'Push Subscription';
+    pluralName: 'push-subscriptions';
+    singularName: 'push-subscription';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    device: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    endpoint: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    keys: Schema.Attribute.JSON & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::push-subscription.push-subscription'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userAgent: Schema.Attribute.String;
+  };
+}
+
 export interface ApiRwaRwa extends Struct.CollectionTypeSchema {
   collectionName: 'rwas';
   info: {
@@ -829,6 +951,172 @@ export interface ApiRwaRwa extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiServiceProviderServiceProvider
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'service_providers';
+  info: {
+    description: 'Service providers directory for Greenwood City Block C (plumbers, electricians, etc.)';
+    displayName: 'Service Provider';
+    pluralName: 'service-providers';
+    singularName: 'service-provider';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    address: Schema.Attribute.Text;
+    available: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    emergency: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    image: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::service-provider.service-provider'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    phone: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 20;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    rating: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 5;
+          min: 1;
+        },
+        number
+      >;
+    serviceType: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    verified: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+  };
+}
+
+export interface ApiThemeTheme extends Struct.SingleTypeSchema {
+  collectionName: 'themes';
+  info: {
+    description: 'Site branding, colors, and visual identity settings for Greenwood City Block C website';
+    displayName: 'Theme';
+    pluralName: 'themes';
+    singularName: 'theme';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    accentColor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }>;
+    backgroundColor: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#F0FFF4'>;
+    backgroundColorDark: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#C6F6D5'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    errorColor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#E53E3E'>;
+    favicon: Schema.Attribute.Media<'images'>;
+    infoColor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#3182CE'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::theme.theme'> &
+      Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
+    logoDark: Schema.Attribute.Media<'images'>;
+    primaryColor: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#2F855A'>;
+    primaryColorDark: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#22543D'>;
+    primaryColorLight: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#48BB78'>;
+    publishedAt: Schema.Attribute.DateTime;
+    secondaryColor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }>;
+    successColor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#38A169'>;
+    textColor: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#1A202C'>;
+    textColorLight: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#4A5568'>;
+    themeColor: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#2F855A'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    warningColor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 9;
+      }> &
+      Schema.Attribute.DefaultTo<'#D69E2E'>;
   };
 }
 
@@ -1348,10 +1636,14 @@ declare module '@strapi/strapi' {
       'api::content-category.content-category': ApiContentCategoryContentCategory;
       'api::event.event': ApiEventEvent;
       'api::gallery.gallery': ApiGalleryGallery;
+      'api::homepage.homepage': ApiHomepageHomepage;
       'api::news.news': ApiNewsNews;
       'api::notification.notification': ApiNotificationNotification;
       'api::policy.policy': ApiPolicyPolicy;
+      'api::push-subscription.push-subscription': ApiPushSubscriptionPushSubscription;
       'api::rwa.rwa': ApiRwaRwa;
+      'api::service-provider.service-provider': ApiServiceProviderServiceProvider;
+      'api::theme.theme': ApiThemeTheme;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

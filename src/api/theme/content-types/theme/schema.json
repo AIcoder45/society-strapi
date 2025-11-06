@@ -1,0 +1,117 @@
+{
+  "kind": "singleType",
+  "collectionName": "themes",
+  "info": {
+    "singularName": "theme",
+    "pluralName": "themes",
+    "displayName": "Theme",
+    "description": "Site branding, colors, and visual identity settings for Greenwood City Block C website"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "logoDark": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "favicon": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "primaryColor": {
+      "type": "string",
+      "required": true,
+      "default": "#2F855A",
+      "maxLength": 9
+    },
+    "primaryColorDark": {
+      "type": "string",
+      "required": true,
+      "default": "#22543D",
+      "maxLength": 9
+    },
+    "primaryColorLight": {
+      "type": "string",
+      "required": true,
+      "default": "#48BB78",
+      "maxLength": 9
+    },
+    "secondaryColor": {
+      "type": "string",
+      "required": false,
+      "maxLength": 9
+    },
+    "backgroundColor": {
+      "type": "string",
+      "required": true,
+      "default": "#F0FFF4",
+      "maxLength": 9
+    },
+    "backgroundColorDark": {
+      "type": "string",
+      "required": false,
+      "default": "#C6F6D5",
+      "maxLength": 9
+    },
+    "textColor": {
+      "type": "string",
+      "required": true,
+      "default": "#1A202C",
+      "maxLength": 9
+    },
+    "textColorLight": {
+      "type": "string",
+      "required": true,
+      "default": "#4A5568",
+      "maxLength": 9
+    },
+    "themeColor": {
+      "type": "string",
+      "required": true,
+      "default": "#2F855A",
+      "maxLength": 9
+    },
+    "accentColor": {
+      "type": "string",
+      "required": false,
+      "maxLength": 9
+    },
+    "errorColor": {
+      "type": "string",
+      "required": false,
+      "default": "#E53E3E",
+      "maxLength": 9
+    },
+    "successColor": {
+      "type": "string",
+      "required": false,
+      "default": "#38A169",
+      "maxLength": 9
+    },
+    "warningColor": {
+      "type": "string",
+      "required": false,
+      "default": "#D69E2E",
+      "maxLength": 9
+    },
+    "infoColor": {
+      "type": "string",
+      "required": false,
+      "default": "#3182CE",
+      "maxLength": 9
+    }
+  }
+}
+

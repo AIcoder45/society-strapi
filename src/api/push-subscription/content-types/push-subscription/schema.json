@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "push_subscriptions",
+  "info": {
+    "singularName": "push-subscription",
+    "pluralName": "push-subscriptions",
+    "displayName": "Push Subscription",
+    "description": "Stores push notification subscriptions for users"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "endpoint": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "keys": {
+      "type": "json",
+      "required": true
+    },
+    "device": {
+      "type": "string",
+      "required": false,
+      "maxLength": 100
+    },
+    "userAgent": {
+      "type": "string",
+      "required": false
+    },
+    "createdAt": {
+      "type": "datetime",
+      "required": false
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "required": false
+    }
+  }
+}
+

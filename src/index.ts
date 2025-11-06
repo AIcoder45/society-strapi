@@ -1,4 +1,6 @@
 import type { Core } from '@strapi/strapi';
+import { compressImage } from './utils/image-compression';
+import { ensureVAPIDInitialized, notifyContentChange } from './utils/push-notifications';
 
 /**
  * Dummy content categories to seed
@@ -230,6 +232,128 @@ const DUMMY_RWA = [
     position: 'Member',
     message: 'I am passionate about organizing community events and activities that bring our neighbors together.',
     order: 7,
+  },
+];
+
+/**
+ * Dummy service providers to seed
+ */
+const DUMMY_SERVICE_PROVIDERS: Array<{
+  name: string;
+  serviceType: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  description?: string;
+  rating?: number;
+  verified: boolean;
+  available: boolean;
+  emergency: boolean;
+  order: number;
+}> = [
+  {
+    name: 'Greenwood Plumbing Services',
+    serviceType: 'plumber',
+    phone: '+1-555-0101',
+    email: 'info@greenwoodplumbing.com',
+    address: '123 Main Street, Greenwood City',
+    description: 'Professional plumbing services for residential and commercial properties. Licensed and insured. 24/7 emergency service available.',
+    rating: 4.8,
+    verified: true,
+    available: true,
+    emergency: true,
+    order: 1,
+  },
+  {
+    name: 'City Electric Solutions',
+    serviceType: 'electrician',
+    phone: '+1-555-0102',
+    email: 'contact@cityelectric.com',
+    address: '456 Oak Avenue, Greenwood City',
+    description: 'Expert electrical services including wiring, repairs, installations, and electrical safety inspections. Certified electricians.',
+    rating: 4.9,
+    verified: true,
+    available: true,
+    emergency: true,
+    order: 2,
+  },
+  {
+    name: 'Pro HVAC Services',
+    serviceType: 'hvac',
+    phone: '+1-555-0103',
+    email: 'service@prohvac.com',
+    address: '789 Pine Road, Greenwood City',
+    description: 'Heating, ventilation, and air conditioning services. Installation, maintenance, and repair of all HVAC systems.',
+    rating: 4.7,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 3,
+  },
+  {
+    name: 'Greenwood Carpentry Works',
+    serviceType: 'carpenter',
+    phone: '+1-555-0104',
+    email: 'info@greenwoodcarpentry.com',
+    address: '321 Elm Street, Greenwood City',
+    description: 'Custom carpentry, furniture making, cabinet installation, and woodworking services. Quality craftsmanship guaranteed.',
+    rating: 4.6,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 4,
+  },
+  {
+    name: 'Quick Fix Appliance Repair',
+    serviceType: 'appliance-repair',
+    phone: '+1-555-0105',
+    email: 'repair@quickfix.com',
+    address: '654 Maple Drive, Greenwood City',
+    description: 'Fast and reliable appliance repair services. We fix refrigerators, washing machines, dryers, ovens, and more.',
+    rating: 4.5,
+    verified: false,
+    available: true,
+    emergency: false,
+    order: 5,
+  },
+  {
+    name: 'Greenwood Landscaping',
+    serviceType: 'landscaper',
+    phone: '+1-555-0106',
+    email: 'hello@greenwoodlandscaping.com',
+    address: '987 Cedar Lane, Greenwood City',
+    description: 'Professional landscaping services including lawn care, garden design, tree planting, and outdoor space beautification.',
+    rating: 4.7,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 6,
+  },
+  {
+    name: '24/7 Locksmith Services',
+    serviceType: 'locksmith',
+    phone: '+1-555-0107',
+    email: 'service@locksmith247.com',
+    address: '147 Birch Boulevard, Greenwood City',
+    description: 'Emergency locksmith services available 24/7. Lock installation, key duplication, safe opening, and security system installation.',
+    rating: 4.8,
+    verified: true,
+    available: true,
+    emergency: true,
+    order: 7,
+  },
+  {
+    name: 'City Painters Pro',
+    serviceType: 'painter',
+    phone: '+1-555-0108',
+    email: 'info@citypainters.com',
+    address: '258 Spruce Street, Greenwood City',
+    description: 'Interior and exterior painting services. Professional painters with years of experience. Free estimates available.',
+    rating: 4.6,
+    verified: true,
+    available: true,
+    emergency: false,
+    order: 8,
   },
 ];
 
@@ -693,6 +817,76 @@ async function seedGalleries(strapi: Core.Strapi): Promise<void> {
 }
 
 /**
+ * Seeds dummy service providers if they don't already exist
+ * Note: Images need to be uploaded manually through Strapi admin panel
+ * @param strapi - Strapi instance
+ */
+async function seedServiceProviders(strapi: Core.Strapi): Promise<void> {
+  try {
+    const contentType = strapi.contentTypes['api::service-provider.service-provider'];
+
+    if (!contentType) {
+      strapi.log.warn('Service Provider content type not found. Skipping seed.');
+      return;
+    }
+
+    const existingProviders = await strapi.entityService.findMany(
+      'api::service-provider.service-provider',
+      {
+        fields: ['name'],
+      }
+    );
+
+    const existingNames = new Set(
+      existingProviders
+        .map((item) => (item.name ? String(item.name).toLowerCase() : ''))
+        .filter((name) => name.length > 0)
+    );
+
+    const providersToCreate = DUMMY_SERVICE_PROVIDERS.filter(
+      (item) => !existingNames.has(item.name.toLowerCase())
+    );
+
+    if (providersToCreate.length === 0) {
+      strapi.log.info('All dummy service providers already exist. Skipping seed.');
+      return;
+    }
+
+    strapi.log.info(`Seeding ${providersToCreate.length} service providers...`);
+    strapi.log.info('Note: Images need to be added manually through the Strapi admin panel.');
+
+    for (const provider of providersToCreate) {
+      try {
+        await strapi.entityService.create('api::service-provider.service-provider', {
+          data: {
+            name: provider.name,
+            serviceType: provider.serviceType,
+            phone: provider.phone,
+            email: provider.email || null,
+            address: provider.address || null,
+            description: provider.description || null,
+            rating: provider.rating || null,
+            verified: provider.verified,
+            available: provider.available,
+            emergency: provider.emergency,
+            order: provider.order,
+            publishedAt: new Date(),
+            // Note: image field is omitted - add images manually through admin panel
+          },
+        });
+        strapi.log.info(`Created service provider: ${provider.name} (${provider.serviceType})`);
+      } catch (error) {
+        strapi.log.error(`Failed to create service provider "${provider.name}":`, error);
+      }
+    }
+
+    strapi.log.info('Service provider seeding completed.');
+  } catch (error) {
+    strapi.log.error('Error seeding service providers:', error);
+  }
+}
+
+/**
  * Seeds dummy RWA committee members if they don't already exist
  * Note: Photos need to be uploaded manually through Strapi admin panel
  * @param strapi - Strapi instance
@@ -779,10 +973,15 @@ async function configurePublicPermissions(strapi: Core.Strapi): Promise<void> {
       'api::gallery.gallery',
       'api::policy.policy',
       'api::rwa.rwa',
+      'api::push-subscription.push-subscription',
+      'api::service-provider.service-provider',
     ];
 
     // Actions to enable for each content type
     const actions = ['find', 'findOne'];
+
+    // Special permissions for push-subscription
+    const pushSubscriptionActions = ['find', 'create', 'delete'];
 
     // Get all existing permissions for the public role
     const existingPermissions = await strapi
@@ -810,6 +1009,19 @@ async function configurePublicPermissions(strapi: Core.Strapi): Promise<void> {
       }
     }
 
+    // Special handling for push-subscription (needs create and delete)
+    const pushSubscriptionType = 'api::push-subscription.push-subscription';
+    for (const action of pushSubscriptionActions) {
+      const permissionAction = `${pushSubscriptionType}.${action}`;
+      const permissionKey = `${permissionAction}-${pushSubscriptionType}`;
+
+      if (!existingPermissionActions.has(permissionKey)) {
+        permissionsToCreate.push({
+          action: permissionAction,
+        });
+      }
+    }
+
     // Also enable Upload/Media find permission for images
     const uploadFindAction = 'plugin::upload.content-api.find';
     const hasUploadFind = existingPermissions.some((p) => p.action === uploadFindAction);
@@ -818,6 +1030,24 @@ async function configurePublicPermissions(strapi: Core.Strapi): Promise<void> {
       permissionsToCreate.push({
         action: uploadFindAction,
       });
+    }
+
+    // Single types need find permission (not findOne)
+    const singleTypes = [
+      'api::homepage.homepage',
+      'api::theme.theme',
+      'api::contact.contact',
+    ];
+
+    for (const singleType of singleTypes) {
+      const findAction = `${singleType}.find`;
+      const hasFind = existingPermissions.some((p) => p.action === findAction);
+
+      if (!hasFind) {
+        permissionsToCreate.push({
+          action: findAction,
+        });
+      }
     }
 
     if (permissionsToCreate.length === 0) {
@@ -907,6 +1137,244 @@ async function seedNotifications(strapi: Core.Strapi): Promise<void> {
   }
 }
 
+/**
+ * Gets file extension from MIME type
+ */
+function getFileExtension(mimeType: string): string {
+  const mimeToExt: Record<string, string> = {
+    'image/jpeg': 'jpeg',
+    'image/jpg': 'jpeg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'image/svg+xml': 'svg',
+  };
+  return mimeToExt[mimeType] || 'jpeg';
+}
+
+/**
+ * Sets up image compression for all uploads
+ * Hooks into the upload service formatFile method to compress images and rename logos
+ * @param strapi - Strapi instance
+ */
+async function setupImageCompression(strapi: Core.Strapi): Promise<void> {
+  try {
+    // Validate that upload plugin exists
+    if (!strapi.plugin('upload')) {
+      strapi.log.warn('Upload plugin not found. Skipping image compression setup.');
+      return;
+    }
+
+    const uploadService = strapi.plugin('upload').service('upload');
+    
+    if (!uploadService) {
+      strapi.log.warn('Upload service not found. Skipping image compression setup.');
+      return;
+    }
+    
+    // Store original formatFile if it exists
+    const originalFormatFile = uploadService.formatFile?.bind(uploadService);
+
+    // Override formatFile method to compress images and rename logos
+    uploadService.formatFile = async function (file: {
+      buffer?: Buffer;
+      mime?: string;
+      name?: string;
+      size?: number;
+      [key: string]: unknown;
+    }) {
+      // Only process image files
+      if (file.mime && file.mime.startsWith('image/') && file.buffer && Buffer.isBuffer(file.buffer)) {
+        try {
+          strapi.log.info(`Compressing image: ${file.name} (${file.mime})`);
+
+          // Compress the image
+          const compressedBuffer = await compressImage(file.buffer, file.mime, strapi);
+
+          // Update the file buffer and size
+          file.buffer = compressedBuffer;
+          file.size = compressedBuffer.length;
+
+          strapi.log.info(`Image compression completed for: ${file.name}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          strapi.log.error(`Failed to compress image ${file.name}: ${errorMessage}`);
+          // Continue with original file if compression fails
+        }
+      }
+
+      // Call original formatFile if it exists, otherwise return the file
+      if (originalFormatFile) {
+        return originalFormatFile(file);
+      }
+      
+      return file;
+    };
+
+    strapi.log.info('Image compression middleware initialized');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    strapi.log.error(`Failed to setup image compression: ${errorMessage}`);
+  }
+}
+
+/**
+ * Sets up push notification lifecycle hooks
+ * Sends notifications when content is created, updated, or deleted
+ * @param strapi - Strapi instance
+ */
+async function setupPushNotifications(strapi: Core.Strapi): Promise<void> {
+  try {
+    // Initialize VAPID keys
+    ensureVAPIDInitialized(strapi);
+
+    // Content types that should trigger push notifications
+    const contentTypesWithNotifications = [
+      'api::news.news',
+      'api::event.event',
+      'api::notification.notification',
+      'api::advertisement.advertisement',
+      'api::policy.policy',
+    ];
+
+    for (const contentType of contentTypesWithNotifications) {
+      strapi.db.lifecycles.subscribe({
+        models: [contentType],
+        async afterCreate(event) {
+          try {
+            await notifyContentChange(
+              contentType.replace('api::', '').replace(/\.\w+$/, ''),
+              'create',
+              event.result,
+              strapi
+            );
+          } catch (error) {
+            strapi.log.error(`Failed to send push notification for ${contentType} create:`, error);
+          }
+        },
+        async afterUpdate(event) {
+          try {
+            await notifyContentChange(
+              contentType.replace('api::', '').replace(/\.\w+$/, ''),
+              'update',
+              event.result,
+              strapi
+            );
+          } catch (error) {
+            strapi.log.error(`Failed to send push notification for ${contentType} update:`, error);
+          }
+        },
+        async afterDelete(event) {
+          try {
+            await notifyContentChange(
+              contentType.replace('api::', '').replace(/\.\w+$/, ''),
+              'delete',
+              event.result || {},
+              strapi
+            );
+          } catch (error) {
+            strapi.log.error(`Failed to send push notification for ${contentType} delete:`, error);
+          }
+        },
+      });
+    }
+
+    strapi.log.info('Push notification lifecycle hooks initialized');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    strapi.log.error(`Failed to setup push notifications: ${errorMessage}`);
+  }
+}
+
+/**
+ * Sets up logo renaming for Theme content type
+ * Renames logo, logoDark, and favicon images to generic names
+ * @param strapi - Strapi instance
+ */
+async function setupLogoRenaming(strapi: Core.Strapi): Promise<void> {
+  try {
+    // Hook into Theme content type lifecycle - use after hooks so files are saved
+    strapi.db.lifecycles.subscribe({
+      models: ['api::theme.theme'],
+      async afterCreate(event) {
+        await renameLogoFiles(event.result, strapi);
+      },
+      async afterUpdate(event) {
+        await renameLogoFiles(event.result, strapi);
+      },
+    });
+
+    strapi.log.info('Logo renaming middleware initialized for Theme content type');
+  } catch (error) {
+    strapi.log.error('Failed to setup logo renaming:', error);
+  }
+}
+
+/**
+ * Renames logo files to generic names
+ * @param themeData - Theme data (can be from params or result)
+ * @param strapi - Strapi instance
+ */
+async function renameLogoFiles(themeData: {
+  logo?: number | { id?: number } | { data?: { id?: number } };
+  logoDark?: number | { id?: number } | { data?: { id?: number } };
+  favicon?: number | { id?: number } | { data?: { id?: number } };
+  [key: string]: unknown;
+}, strapi: Core.Strapi): Promise<void> {
+  const logoFields = [
+    { field: 'logo', genericName: 'logo' },
+    { field: 'logoDark', genericName: 'logo-dark' },
+    { field: 'favicon', genericName: 'favicon' },
+  ];
+
+  for (const { field, genericName } of logoFields) {
+    const fileRef = themeData[field];
+    if (!fileRef) continue;
+
+    try {
+      // Get the file ID - handle different formats (number, object with id, or populated with data.id)
+      let id: number | undefined;
+      if (typeof fileRef === 'number') {
+        id = fileRef;
+      } else if (fileRef && typeof fileRef === 'object') {
+        id = (fileRef as { id?: number; data?: { id?: number } }).id || 
+             (fileRef as { id?: number; data?: { id?: number } }).data?.id;
+      }
+      
+      if (!id) continue;
+
+      // Fetch the file
+      const file = await strapi.entityService.findOne('plugin::upload.file', id, {
+        populate: '*',
+      });
+
+      if (!file || !file.mime || !file.mime.startsWith('image/')) {
+        continue;
+      }
+
+      // Get file extension from MIME type
+      const extension = getFileExtension(file.mime);
+      const newName = `${genericName}.${extension}`;
+
+      // Only rename if it's different
+      if (file.name !== newName) {
+        // Update the file name
+        await strapi.entityService.update('plugin::upload.file', id, {
+          data: {
+            name: newName,
+          },
+        });
+
+        strapi.log.info(`Renamed ${field} from "${file.name}" to "${newName}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      strapi.log.warn(`Failed to rename ${field}: ${errorMessage}`);
+      // Continue with other fields if one fails
+    }
+  }
+}
+
 export default {
   /**
    * An asynchronous register function that runs before
@@ -924,6 +1392,15 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    // Setup image compression for uploads
+    await setupImageCompression(strapi);
+    
+    // Setup logo renaming for Theme content type
+    await setupLogoRenaming(strapi);
+
+    // Setup push notifications
+    await setupPushNotifications(strapi);
+
     await configurePublicPermissions(strapi);
     await seedContentCategories(strapi);
     await seedAdvertisements(strapi);
@@ -932,5 +1409,6 @@ export default {
     await seedGalleries(strapi);
     await seedRWA(strapi);
     await seedNotifications(strapi);
+    await seedServiceProviders(strapi);
   },
 };
